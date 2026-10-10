@@ -1,18 +1,49 @@
-{% extends "layout.html" %}
-{% block body %}
+{{% extends "layout.html" %}}
+{{% block body %}}
  
 <div class="block1">
-<form action = "/xxe_uploader" method = "POST" enctype = "multipart/form-data">
+<form action="/xxe_uploader" method="POST" enctype="multipart/form-data" onsubmit="return validateUpload(this)">
 	<h1>XXE {{name}}</h1>
   	<h2>Here is an interesting quote for you: </h2>
   	<p>
 		"The limits of my language are the limits of my mind. All I know is what I have words for."
   	</p>
       
-         <input type = "file" name = "file" />
-         <input type = "submit"/>
+         <!-- Restrict client-side selectable file types and validate size before upload -->
+         <input type="file" name="file" id="file" accept=".xml,application/xml,text/xml" />
+         <input type="submit"/>
+</form>
 
-<!--<img src="http://www.naturalprogramming.com/images/smilingpython.gif">-->
+<script>
+// Client-side validation to reduce accidental large/malformed uploads.
+// NOTE: Server must still enforce strict validation, size limits, and use a secure XML parser (disable external entities) when processing uploaded XML.
+function validateUpload(form) {
+    var f = document.getElementById('file');
+    if (!f.files || f.files.length === 0) {
+        alert('Please select a file to upload');
+        return false;
+    }
+    var file = f.files[0];
+    var maxBytes = 2 * 1024 * 1024; // 2MB client-side limit
+    if (file.size > maxBytes) {
+        alert('File too large (max 2MB)');
+        return false;
+    }
+    // Basic MIME/extension check; server-side validation is authoritative.
+    var allowed = ['application/xml', 'text/xml'];
+    if (file.type && allowed.indexOf(file.type) === -1) {
+        if (!file.name.toLowerCase().endsWith('.xml')) {
+            alert('Only XML files are allowed');
+            return false;
+        }
+    }
+    return true;
+}
+</script>
+
+<!--
+  Security: This template adds client-side constraints to reduce the likelihood of inappropriate files being uploaded.
+  IMPORTANT: Server-side must still enforce file type, size, and disable XML external entities to prevent XXE (CWE-611).
+-->
 </div>
-{% endblock %}
-
+{{% endblock %}}
