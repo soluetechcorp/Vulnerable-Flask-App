@@ -14,8 +14,10 @@ proxies = {
 
 auth_dict = {'username': 'admin', 'password': 'admin123'}
 
+# Enable TLS certificate validation for requests to prevent MITM attacks.
+# Security: verify=True enforces certificate checking (CWE-295).
 login = requests.post(target_url + '/login',
-                      proxies=proxies, json=auth_dict, verify=False)
+                      proxies=proxies, json=auth_dict, verify=True)
 
 
 if login.status_code == 200:  # if login is successful
@@ -25,28 +27,24 @@ if login.status_code == 200:  # if login is successful
     # now lets run some operations
     # GET Customer by ID
 
+    # Security: enable TLS verification and avoid printing full JSON responses to stdout
+    # to prevent leaking PII in logs (CWE-532). Instead print non-sensitive summaries only.
     get_cust_id = requests.get(
-        target_url + '/get/2', proxies=proxies, headers=auth_header, verify=False)
+        target_url + '/get/2', proxies=proxies, headers=auth_header, verify=True)
     if get_cust_id.status_code == 200:
-        print("Get Customer by ID Response")
-        print(get_cust_id.json())
-        print()
+        print("Get Customer by ID Response: status=200, bytes_received={}".format(len(get_cust_id.content)))
 
     post = {'id': 2}
     fetch_customer_post = requests.post(
-        target_url + '/fetch/customer', json=post, proxies=proxies, headers=auth_header, verify=False)
+        target_url + '/fetch/customer', json=post, proxies=proxies, headers=auth_header, verify=True)
     if fetch_customer_post.status_code == 200:
-        print("Fetch Customer POST Response")
-        print(fetch_customer_post.json())
-        print()
+        print("Fetch Customer POST Response: status=200, bytes_received={}".format(len(fetch_customer_post.content)))
 
     search = {'search': 'dleon'}
     search_customer_username = requests.post(
-        target_url + '/search', json=search, proxies=proxies, headers=auth_header, verify=False)
+        target_url + '/search', json=search, proxies=proxies, headers=auth_header, verify=True)
     if search_customer_username.status_code == 200:
-        print("Search Customer POST Response")
-        print(search_customer_username.json())
-        print()
+        print("Search Customer POST Response: status=200, bytes_received={}".format(len(search_customer_username.content)))
 
 
 # ZAP Operations
