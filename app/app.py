@@ -60,10 +60,19 @@ def search_users():
     params = {"term": f"%{term}%", "limit": limit}
 
     try:
-        # Replaced direct string execution with a parameterized execution using sqlalchemy.text
-        # to prevent SQL injection. We pass a params dict to bind user inputs safely.
-        search_query = db.session.execute(text(str_query), params)
-        # Security comment: using text() with bound parameters prevents injection attacks (CWE-89).
+        # Use SQLAlchemy Core select with literal_column and bindparam to avoid executing
+        # a raw text SQL string that could bypass ORM protections (fix for CWE-89).
+        # Local imports used to avoid changing module-level imports.
+        from sqlalchemy import select, literal_column, bindparam
+
+        # Select id, the whitelisted column, and email. literal_column(column) is safe
+        # because 'column' was previously validated against the whitelist.
+        stmt = select([literal_column("id"), literal_column(column), literal_column("email")]) \
+            .where(literal_column(column).like(bindparam("term"))).limit(bindparam("limit"))
+
+        # Execute the statement with a params dict so user input is bound safely.
+        search_query = db.session.execute(stmt, params)
+        # Security comment: using Core select() with bound parameters prevents injection attacks.
 
         rows = search_query.fetchall()
 
@@ -86,4 +95,6 @@ def search_users():
 
 if __name__ == "__main__":
     # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Bind to localhost by default to avoid exposing the development server publicly (CWE-668).
+    # Allow override via FLASK_RUN_HOST environment variable for controlled deployments.
+    app.run(host=os.environ.get("FLASK_RUN_HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5000)))
