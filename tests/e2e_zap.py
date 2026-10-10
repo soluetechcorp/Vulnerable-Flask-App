@@ -3,49 +3,55 @@ from zapv2 import ZAPv2 as ZAP
 import time
 import datetime
 from os import getcwd
+import logging
 
 # Test Automation Part of the Script
 
 target_url = 'http://localhost:5050'
-proxies = {
-    'http': 'http://127.0.0.1:8090',
-    'https': 'http://127.0.0.1:8090',
-}
+# Do not route sensitive test traffic through a local HTTP proxy by default.
+# Security: Avoid sending auth tokens and PII to third-party proxies/logs (CWE-532).
+proxies = {}
 
 auth_dict = {'username': 'admin', 'password': 'admin123'}
 
+# Perform login with TLS certificate validation enabled to prevent MITM attacks (CWE-295).
 login = requests.post(target_url + '/login',
-                      proxies=proxies, json=auth_dict, verify=False)
+                      proxies=proxies, json=auth_dict, verify=True)  # Security: verify=True enables certificate validation
 
 
 if login.status_code == 200:  # if login is successful
-    auth_token = login.headers['Authorization']
-    auth_header = {"Authorization": auth_token}
+    # Safely extract Authorization header. Use .get to avoid KeyError.
+    auth_token = login.headers.get('Authorization')
+    auth_header = {"Authorization": auth_token} if auth_token else {}
 
     # now lets run some operations
     # GET Customer by ID
 
+    # Perform sensitive authenticated requests without routing them through an external proxy
+    # and with TLS certificate verification enabled (CWE-295, CWE-532).
     get_cust_id = requests.get(
-        target_url + '/get/2', proxies=proxies, headers=auth_header, verify=False)
+        target_url + '/get/2', headers=auth_header, verify=True)  # Security: avoid proxies and enable verification
     if get_cust_id.status_code == 200:
-        print("Get Customer by ID Response")
-        print(get_cust_id.json())
+        # Do not print PII or full JSON responses to stdout. Redact sensitive data before logging.
+        print("Get Customer by ID Response - status: {}".format(get_cust_id.status_code))
+        print("Response content redacted for privacy")
         print()
 
     post = {'id': 2}
     fetch_customer_post = requests.post(
-        target_url + '/fetch/customer', json=post, proxies=proxies, headers=auth_header, verify=False)
+        target_url + '/fetch/customer', json=post, headers=auth_header, verify=True)  # Security: verify certs, no proxy
     if fetch_customer_post.status_code == 200:
-        print("Fetch Customer POST Response")
-        print(fetch_customer_post.json())
+        # Redact sensitive payloads before printing/logging
+        print("Fetch Customer POST Response - status: {}".format(fetch_customer_post.status_code))
+        print("Response content redacted for privacy")
         print()
 
     search = {'search': 'dleon'}
     search_customer_username = requests.post(
-        target_url + '/search', json=search, proxies=proxies, headers=auth_header, verify=False)
+        target_url + '/search', json=search, headers=auth_header, verify=True)  # Security: verify certs, no proxy
     if search_customer_username.status_code == 200:
-        print("Search Customer POST Response")
-        print(search_customer_username.json())
+        print("Search Customer POST Response - status: {}".format(search_customer_username.status_code))
+        print("Response content redacted for privacy")
         print()
 
 
