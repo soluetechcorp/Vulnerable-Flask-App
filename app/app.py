@@ -54,16 +54,17 @@ def search_users():
     # Build the SQL with a whitelisted column name inserted directly (safe)
     # and user-supplied values passed as bind parameters below to prevent SQL injection.
     column = allowed_columns[field]
-    str_query = f"SELECT id, name, email FROM users WHERE {column} LIKE :term LIMIT :limit"
+    str_query = f"SELECT id, name, email FROM users WHERE {{column}} LIKE :term LIMIT :limit"
 
     # Prepare parameters using a dictionary; use parameterized execution below.
     params = {"term": f"%{term}%", "limit": limit}
 
     try:
-        # Replaced direct string execution with a parameterized execution using sqlalchemy.text
-        # to prevent SQL injection. We pass a params dict to bind user inputs safely.
-        search_query = db.session.execute(text(str_query), params)
-        # Security comment: using text() with bound parameters prevents injection attacks (CWE-89).
+        # Safely substitute the whitelisted column placeholder into the SQL string.
+        # Security: only the validated whitelist column name is inserted into the SQL text
+        # to prevent SQL injection. User data remains bound via parameters.
+        safe_query = str_query.replace("{column}", column)
+        search_query = db.session.execute(text(safe_query), params)
 
         rows = search_query.fetchall()
 
@@ -78,12 +79,14 @@ def search_users():
 
         return jsonify({"results": results}), 200
 
-    except Exception as e:
-        # Do not log sensitive user input; log generic error and return generic message
-        logger.exception("Database search failed")
+    except Exception:
+        # Do not log exception details or sensitive inputs; log a generic message only.
+        # Security: avoid writing stack traces or sensitive params to logs (CWE-532).
+        logger.error("Database search failed")
         return jsonify({"error": "internal server error"}), 500
 
 
 if __name__ == "__main__":
-    # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Only for local development. In production, use a WSGI server and bind via configuration.
+    # Security: bind to localhost by default to avoid exposing development server (CWE-668).
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)))
