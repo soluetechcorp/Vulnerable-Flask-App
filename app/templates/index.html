@@ -8,9 +8,11 @@
     <p>You have reached the Vulnerable App.</p>
     <p>Here are the list of urls you would need while using this application</p>
     <ul>
-        {% for url in urls %}
-            <li><a href = "{{ url[0] }}">{{ url[0] }}</a> - {{ url[1] }} - Allowed Methods: {{ url[2] }}</li>
-        {% endfor %}
+        {{% for url in urls %}}
+            {# Security: validate scheme and HTML-escape user-provided URL and metadata to prevent href injection/XSS (CWE-79). Only allow http/https links; otherwise render a safe placeholder. #}
+            {{% set href = url[0] if (url[0] is string and (url[0].startswith('http://') or url[0].startswith('https://'))) else '#' %}}
+            <li><a href="{{ href|e }}">{{ url[0]|e }}</a> - {{ url[1]|e }} - Allowed Methods: {{ url[2]|e }}</li>
+        {{% endfor %}}
     </ul>
 </body>
 </html>

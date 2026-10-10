@@ -1,18 +1,20 @@
-{% extends "layout.html" %}
-{% block body %}
+{{% extends "layout.html" %}}
+{{% block body %}}
  
 <div class="block1">
 <form action = "/xxe_uploader" method = "POST" enctype = "multipart/form-data">
-	<h1>XXE {{name}}</h1>
+	<h1>XXE {{ name|e }}</h1>
   	<h2>Here is an interesting quote for you: </h2>
   	<p>
 		"The limits of my language are the limits of my mind. All I know is what I have words for."
   	</p>
       
-         <input type = "file" name = "file" />
+         <!-- Security: add CSRF token to protect file uploads from CSRF (CWE-352) -->
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+         <!-- Security: restrict client-side selectable file types; server MUST still validate and disable external entity resolution to prevent XXE (CWE-611) -->
+         <input type="file" name="file" accept="image/*,text/plain,application/pdf" />
          <input type = "submit"/>
 
 <!--<img src="http://www.naturalprogramming.com/images/smilingpython.gif">-->
 </div>
-{% endblock %}
-
+{{% endblock %}}
