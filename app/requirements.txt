@@ -3,7 +3,8 @@ certifi==2017.4.17
 chardet==3.0.4
 click==6.7
 Faker==0.7.17
-Flask==0.12.2
+# Security: upgraded Flask to patch CVE-2018-1000656 (JSON encoding DoS)
+Flask==0.12.3
 Flask-SQLAlchemy==2.2
 gevent==1.2.2
 greenlet==0.4.12
@@ -11,18 +12,24 @@ grequests==0.3.0
 idna==2.5
 ipaddress==1.0.18
 itsdangerous==0.24
-Jinja2==2.9.6
-lxml==4.2.1
+# Security: upgraded Jinja2 to mitigate ReDoS & sandbox escape issues
+Jinja2==2.11.3
+# Security: upgraded lxml to fix multiple CVEs including XSS, NULL deref and HTML cleaner bypasses
+lxml==4.9.1
 MarkupSafe==1.0
 MySQL-python==1.2.5
 PyJWT==1.5.2
 python-dateutil==2.6.0
-python-docx==0.8.5
+# Security: upgraded python-docx to fix XXE/XXE-related issues
+python-docx==0.8.6
 PyYAML==3.12
-requests==2.18.1
+# Security: upgraded requests to a non-vulnerable release (fixes Proxy-Authorization leaks and other issues)
+requests==2.32.4
 singledispatch==3.4.0.3
 six==1.10.0
-SQLAlchemy==1.1.11
+# Security: upgraded SQLAlchemy to address SQL injection related CVEs
+SQLAlchemy==1.2.19
 tornado==4.5.1
-urllib3==1.21.1
+# Security: upgraded urllib3 to mitigate multiple CVEs including redirected header leakage and cookie leakage
+urllib3==1.26.19
 Werkzeug==0.14.1
