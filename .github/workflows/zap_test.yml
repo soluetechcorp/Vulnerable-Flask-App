@@ -1,5 +1,9 @@
 name: ZAP-Test
 
+# Limit top-level permissions to the minimum necessary to avoid write-all default permissions (CWE-1032)
+permissions:
+  contents: read
+
 on:
   push: 
     branches: [ master ]
