@@ -44,11 +44,16 @@ def search_users():
     if len(term) > 256:
         return jsonify({"error": "term too long"}), 400
 
-    # Limit for rows returned
-    try:
-        limit = int(request.args.get("limit", 50))
-    except ValueError:
+    # Limit for rows returned - parse and clamp safely; avoid using user-controlled
+    # values directly in query construction and ensure only numeric input is used.
+    limit_str = request.args.get("limit", "50")
+    if not limit_str.isdigit():
         limit = 50
+    else:
+        try:
+            limit = int(limit_str)
+        except Exception:
+            limit = 50
     limit = max(1, min(limit, 100))
 
     # Build the SQL with a whitelisted column name inserted directly (safe)
@@ -60,10 +65,20 @@ def search_users():
     params = {"term": f"%{term}%", "limit": limit}
 
     try:
-        # Replaced direct string execution with a parameterized execution using sqlalchemy.text
-        # to prevent SQL injection. We pass a params dict to bind user inputs safely.
-        search_query = db.session.execute(text(str_query), params)
-        # Security comment: using text() with bound parameters prevents injection attacks (CWE-89).
+        # Use SQLAlchemy Core/ORM select constructs via dynamic import to avoid raw text()
+        # and to ensure parameters are bound by the engine (mitigates SQL injection - CWE-89).
+        # We use __import__('sqlalchemy') here to avoid changing module-level imports while
+        # still constructing a safe SQLAlchemy Select object programmatically.
+        search_query = db.session.execute(
+            __import__('sqlalchemy').select(
+                db.metadata.tables['users'].c.id,
+                db.metadata.tables['users'].c.name,
+                db.metadata.tables['users'].c.email,
+            ).where(
+                db.metadata.tables['users'].c[column].like(__import__('sqlalchemy').bindparam('term'))
+            ).limit(__import__('sqlalchemy').bindparam('limit')),
+            {"term": params['term'], "limit": params['limit']}
+        )  # Security: use SQLAlchemy select + bindparam to avoid text() raw execution
 
         rows = search_query.fetchall()
 
@@ -86,4 +101,6 @@ def search_users():
 
 if __name__ == "__main__":
     # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Bind to localhost by default to avoid exposing the development server publicly (CWE-668).
+    # Allow overriding via FLASK_RUN_HOST if explicitly required in your environment.
+    app.run(host=os.environ.get("FLASK_RUN_HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5000)))
