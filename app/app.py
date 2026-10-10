@@ -94,9 +94,13 @@ def search_users():
         return jsonify({"results": results}), 200
 
     except Exception as e:
-        # Do not log sensitive user input; log generic error and return generic message
-        logger.exception("Database search failed")
-        return jsonify({"error": "internal server error"}), 500
+        # Security: avoid logging exception stack traces or exception objects that may
+        # contain sensitive runtime data or SQL fragments. Log only a short correlation
+        # identifier so support can correlate logs without exposing PII/secrets.
+        error_id = str(__import__('uuid').uuid4())  # generate id without adding top-level import
+        logger.error("Database search failed; error_id=%s", error_id)
+        # Return a generic error message; include the error_id to help diagnostics without exposing internals.
+        return jsonify({"error": "internal server error", "error_id": error_id}), 500
 
 
 if __name__ == "__main__":
