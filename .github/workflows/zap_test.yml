@@ -1,5 +1,9 @@
 name: ZAP-Test
 
+# Limit workflow permissions to the minimum required to avoid write-all top-level permissions (CKV2_GHA_1)
+permissions:
+  contents: read
+
 on:
   push: 
     branches: [ master ]
