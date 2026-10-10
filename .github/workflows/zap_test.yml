@@ -4,6 +4,10 @@ on:
   push: 
     branches: [ master ]
 
+# Security: restrict workflow permissions to the minimum required to avoid overly broad write-all access
+permissions:
+  contents: read
+
 jobs: 
   build: 
     runs-on: ubuntu-18.04
