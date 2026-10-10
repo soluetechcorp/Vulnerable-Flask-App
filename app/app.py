@@ -60,10 +60,11 @@ def search_users():
     params = {"term": f"%{term}%", "limit": limit}
 
     try:
-        # Replaced direct string execution with a parameterized execution using sqlalchemy.text
-        # to prevent SQL injection. We pass a params dict to bind user inputs safely.
-        search_query = db.session.execute(text(str_query), params)
-        # Security comment: using text() with bound parameters prevents injection attacks (CWE-89).
+        # Use text() with explicit parameter binding to ensure user inputs are bound and
+        # not interpolated directly into the SQL, preventing SQL injection (CWE-89).
+        # Security comment: bind parameters via the params keyword to avoid accidental
+        # string interpolation of user input into the SQL statement.
+        search_query = db.session.execute(text(str_query), params=params)
 
         rows = search_query.fetchall()
 
@@ -86,4 +87,4 @@ def search_users():
 
 if __name__ == "__main__":
     # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)))  # Security: bind to localhost for dev to avoid exposing app externally (CWE-668)
