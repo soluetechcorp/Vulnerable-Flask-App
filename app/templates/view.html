@@ -6,7 +6,7 @@
 	<h1>Result</h1>
   	<h2>Here is an interesting quote for you: </h2>
   	<p>
-		{{name}}
+		{{ name | e }} <!-- Security: escape user-supplied name to prevent XSS (CWE-79) -->
   	</p>
 <!--      
          <input type = "file" name = "file" />
