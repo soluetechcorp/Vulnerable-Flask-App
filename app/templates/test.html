@@ -3,7 +3,8 @@
  
 <div class="block1">
 <form action = "/xxe_uploader" method = "POST" enctype = "multipart/form-data">
-	<h1>XXE {{name}}</h1>
+	<!-- Security: escape user-supplied name to prevent XSS (CWE-79) -->
+	<h1>XXE {{ name | e }}</h1>
   	<h2>Here is an interesting quote for you: </h2>
   	<p>
 		"The limits of my language are the limits of my mind. All I know is what I have words for."
