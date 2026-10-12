@@ -7,10 +7,7 @@ from os import getcwd
 # Test Automation Part of the Script
 
 target_url = 'http://localhost:5050'
-proxies = {
-    'http': 'http://127.0.0.1:8090',
-    'https': 'http://127.0.0.1:8090',
-}
+proxies = {}  # Disabled proxy to avoid routing sensitive test requests through local interceptors (prevents PII/credentials from being captured)
 
 auth_dict = {'username': 'admin', 'password': 'admin123'}
 
