@@ -4,6 +4,10 @@ on:
   push: 
     branches: [ master ]
 
+# Restrict top-level permissions to least privilege instead of write-all (CWE-1032).
+permissions:
+  contents: read
+
 jobs: 
   build: 
     runs-on: ubuntu-18.04
