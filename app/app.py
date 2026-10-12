@@ -78,12 +78,15 @@ def search_users():
 
         return jsonify({"results": results}), 200
 
-    except Exception as e:
-        # Do not log sensitive user input; log generic error and return generic message
-        logger.exception("Database search failed")
+    except Exception:
+        # Avoid logging exception details (stack trace/request data) to prevent leaking PII;
+        # log a generic message without sensitive context. Reviewers should configure
+        # structured logging and secure log access separately in production.
+        logger.error("Database search failed while processing request")  # Do not include exception details or stack trace
         return jsonify({"error": "internal server error"}), 500
 
 
 if __name__ == "__main__":
     # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Bind address is configurable via APP_HOST; default to loopback to avoid exposing dev server.
+    app.run(host=os.environ.get("APP_HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5000)))
