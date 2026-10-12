@@ -60,10 +60,24 @@ def search_users():
     params = {"term": f"%{term}%", "limit": limit}
 
     try:
-        # Replaced direct string execution with a parameterized execution using sqlalchemy.text
-        # to prevent SQL injection. We pass a params dict to bind user inputs safely.
-        search_query = db.session.execute(text(str_query), params)
-        # Security comment: using text() with bound parameters prevents injection attacks (CWE-89).
+        # Build a safe SQLAlchemy Core statement using reflected table and bound parameters
+        # Local imports here avoid touching top-level import order while enabling use of
+        # SQLAlchemy Core constructs (select, Table, bindparam) to prevent SQL injection.
+        from sqlalchemy import Table, select, bindparam
+
+        # Reflect the 'users' table from the database metadata to build a safe expression
+        users = Table("users", db.metadata, autoload_with=db.engine)
+
+        # Use SQLAlchemy operators (select / where / like) with bind parameters instead of text()
+        stmt = (
+            select(users.c.id, users.c.name, users.c.email)
+            .where(users.c[column].like(bindparam("term")))
+            .limit(bindparam("limit"))
+        )
+
+        # Execute the constructed statement with the params mapping to bind values safely.
+        # Security: using SQLAlchemy Core select() with bind parameters avoids SQL injection (CWE-89).
+        search_query = db.session.execute(stmt, params)
 
         rows = search_query.fetchall()
 
