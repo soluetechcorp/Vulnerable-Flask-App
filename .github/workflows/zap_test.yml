@@ -4,6 +4,10 @@ on:
   push: 
     branches: [ master ]
 
+# Restrict workflow permissions to the minimum necessary to reduce blast radius.
+permissions:
+  contents: read
+
 jobs: 
   build: 
     runs-on: ubuntu-18.04
