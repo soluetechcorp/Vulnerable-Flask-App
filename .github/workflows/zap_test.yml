@@ -1,5 +1,10 @@
 name: ZAP-Test
 
+# Restrict workflow permissions to the minimal set required to run tests and upload artifacts.
+# Security: Do not grant write-all or excessive permissions to reduce blast radius (fixes CKV2_GHA_1).
+permissions:
+  contents: read
+
 on:
   push: 
     branches: [ master ]
