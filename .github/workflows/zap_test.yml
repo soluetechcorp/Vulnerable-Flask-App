@@ -1,5 +1,9 @@
 name: ZAP-Test
 
+# Security: set least-privilege permissions for the workflow to reduce blast radius (CWE-1032)
+permissions:
+  contents: read
+
 on:
   push: 
     branches: [ master ]
