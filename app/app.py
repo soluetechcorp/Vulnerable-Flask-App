@@ -86,4 +86,6 @@ def search_users():
 
 if __name__ == "__main__":
     # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Bind to localhost by default to avoid unintentionally exposing the development server.
+    # For production, a WSGI server (gunicorn/uwsgi) should be used behind a reverse proxy.
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)))  # Security: avoid 0.0.0.0 in dev
