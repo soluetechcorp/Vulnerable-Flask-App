@@ -4,6 +4,11 @@ on:
   push: 
     branches: [ master ]
 
+# Restrict workflow permissions to read-only for contents to avoid granting write-all tokens.
+# Security comment: limit default permissions to least privilege to mitigate supply-chain risks (CKV2_GHA_1).
+permissions:
+  contents: read
+
 jobs: 
   build: 
     runs-on: ubuntu-18.04
