@@ -9,7 +9,13 @@
     <p>Here are the list of urls you would need while using this application</p>
     <ul>
         {% for url in urls %}
-            <li><a href = "{{ url[0] }}">{{ url[0] }}</a> - {{ url[1] }} - Allowed Methods: {{ url[2] }}</li>
+            {# Security: validate URL scheme to allow only http/https and avoid javascript:/data: XSS vectors. #}
+            {% set href = url[0] %}
+            {% if href.startswith('http://') or href.startswith('https://') %}
+                <li><a href="{{ href }}" rel="noopener noreferrer" target="_blank">{{ href }}</a> - {{ url[1] }} - Allowed Methods: {{ url[2] }}</li>
+            {% else %}
+                <li>{{ href }} - {{ url[1] }} - Allowed Methods: {{ url[2] }}</li>
+            {% endif %}
         {% endfor %}
     </ul>
 </body>
