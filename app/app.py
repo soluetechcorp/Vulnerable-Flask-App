@@ -86,4 +86,6 @@ def search_users():
 
 if __name__ == "__main__":
     # Only for local development. In production, use a WSGI server.
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Security: bind to localhost by default to avoid exposing the Flask dev server publicly.
+    # Override FLASK_RUN_HOST environment variable only for explicit, controlled cases.
+    app.run(host=os.environ.get("FLASK_RUN_HOST", "127.0.0.1"), port=int(os.environ.get("PORT", 5000)))
