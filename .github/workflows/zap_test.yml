@@ -1,5 +1,10 @@
 name: ZAP-Test
 
+# Restrict default workflow permissions to least privilege to avoid write-all top-level permissions.
+# Security: grant only read access to contents; adjust further per-job if additional permissions are required.
+permissions:
+  contents: read
+
 on:
   push: 
     branches: [ master ]
